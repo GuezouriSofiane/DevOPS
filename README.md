@@ -206,6 +206,17 @@ Une fois les conteneurs démarrés :
 
 ---
 
+# Commandes utiles (via Makefile)
+
+* **Lancer l'environnement :** `make start`
+* **Arrêter l'environnement :** `make stop`
+* **Vérifier le statut des conteneurs :** `make status`
+* **Voir les logs en direct :** `make logs`
+* **Lancer le script de supervision :** `make check`
+* **Remise à zéro complète (efface la DB) :** `make clean`
+
+---
+
 # 📁 Structure du projet
 
 ```text
