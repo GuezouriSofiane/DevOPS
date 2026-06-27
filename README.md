@@ -1,4 +1,4 @@
-# 🌐 Projet de Déploiement d'Architecture Conteneurisée (DevOps)
+#  Projet de Déploiement d'Architecture Conteneurisée (DevOps)
 
 Ce projet a été réalisé dans le cadre d'un exercice technique de **Stage DevOps / Administration Système & Réseau**.
 
@@ -6,13 +6,13 @@ L'objectif est de déployer une application web conteneurisée composée d'un **
 
 ---
 
-# 🏗️ Architecture Technique
+#  Architecture Technique
 
 L'application est composée de quatre services Docker orchestrés et isolés.
 
 ```mermaid
 graph TD
-    Client["🌐 Navigateur Client"] -->|Port 80 : HTTP| Apache["Apache HTTPD<br/>Reverse Proxy"]
+    Client[" Navigateur Client"] -->|Port 80 : HTTP| Apache["Apache HTTPD<br/>Reverse Proxy"]
 
     subgraph app_net["Réseau Docker privé (app_net)"]
         Apache -->|/| Frontend["Frontend<br/>Nginx / Alpine"]
@@ -41,7 +41,7 @@ Les services sont les suivants :
 
 ---
 
-# 🔒 Choix Techniques et Sécurité
+#  Choix Techniques et Sécurité
 
 ## Isolation réseau
 
@@ -104,10 +104,12 @@ Le projet intègre plusieurs bonnes pratiques et éléments complémentaires :
 * Documentation complète (`README.md` et `docs/troubleshooting.md`) pour faciliter le déploiement et le diagnostic.
 * Script de supervision (`scripts/check.sh`) permettant de vérifier automatiquement l'état des services et des principaux endpoints.
 * Reverse Proxy Apache configuré avec `ProxyPass` et `ProxyPassReverse` pour séparer le Frontend et le Backend.
+* Dockerfile multi-stage :** Séparation de l'étape de build et d'exécution pour réduire la taille de l'image finale.
+* Sécurité Non-Root :** Le conteneur Backend s'exécute avec un utilisateur aux privilèges restreints (`flaskuser`) au lieu de `root`.
 
 ---
 
-# 🚀 Guide de démarrage
+#  Guide de démarrage
 
 ## Prérequis
 
@@ -164,7 +166,7 @@ docker compose ps
 
 ---
 
-# 🛠️ Commandes utiles
+#  Commandes utiles
 
 ## Afficher les conteneurs
 
@@ -193,7 +195,7 @@ docker compose up -d --build
 
 ---
 
-# 🌐 Endpoints disponibles
+#  Endpoints disponibles
 
 Une fois les conteneurs démarrés :
 
@@ -217,31 +219,36 @@ Une fois les conteneurs démarrés :
 
 ---
 
-# 📁 Structure du projet
+#  Structure du projet
 
 ```text
 project/
 ├── README.md
 ├── docker-compose.yml
+├── Makefile               
+├── .env                      
 ├── .env.example
 ├── apache/
 │   └── vhost.conf
 ├── backend/
-│   ├── Dockerfile
-│   ├── app.py
+│   ├── Dockerfile            
+│   ├── app.py                
 │   └── requirements.txt
 ├── frontend/
 │   ├── Dockerfile
 │   └── index.html
 ├── scripts/
 │   └── check.sh
-└── docs/
-    └── troubleshooting.md
+├── docs/
+│   └── troubleshooting.md
+└── kubernetes/             
+    └── postgres-networkpolicy.yaml
+
 ```
 
 ---
 
-# 📋 Description des services
+#  Description des services
 
 | Service    | Description                         |
 | ---------- | ----------------------------------- |
@@ -252,7 +259,7 @@ project/
 
 ---
 
-# ⚠️ Limites connues
+#  Limites connues
 
 * L'application utilise uniquement le protocole **HTTP**.
 * Aucun certificat SSL/TLS n'est configuré.
@@ -261,7 +268,7 @@ project/
 
 ---
 
-# 🚀 Pistes d'amélioration
+#  Pistes d'amélioration
 
 Plusieurs améliorations pourraient être apportées :
 
@@ -275,7 +282,7 @@ Plusieurs améliorations pourraient être apportées :
 
 ---
 
-# 📖 Documentation
+#  Documentation
 
 Les fichiers suivants complètent le projet :
 
