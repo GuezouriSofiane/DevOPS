@@ -1,0 +1,80 @@
+version: "3.9" #version du format Docker Compose
+
+services:
+  
+  postgres:
+    image: postgres:16 #telecharge image officielle PostrSQL
+    container_name: postgres
+    restart: always #si conteneur sarrete Docker le redémarre
+    env_file:
+      - .env #docker lit auto .env et transmet les POSTGRES
+    
+    volumes:
+      - postgres_data:/var/lib/postgresql/data #conserver les données meme si le conteneur est suprimé
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql #premier demarrage PostgrSQL ececute auto init.sql
+
+    networks:
+      - app_net #tous les conteneurs sur le meme reseau
+
+  backend:
+
+    build: ./backend
+
+    container_name: backend
+
+    restart: always
+
+    env_file:
+      - .env
+
+    depends_on: #attend que postgrSQL démarre
+      - postgres
+
+    networks:
+      - app_net
+
+  frontend:
+
+    build: ./frontend
+
+    container_name: frontend
+
+    restart: always
+
+    networks:
+      - app_net
+
+  apache:
+    image: httpd:2.4-alpine
+    container_name: apache
+    restart: always
+    ports:
+      - "80:80"
+    command: >
+      sh -c "
+      echo 'LoadModule proxy_module modules/mod_proxy.so' >> /usr/local/apache2/conf/httpd.conf &&
+      echo 'LoadModule proxy_http_module modules/mod_proxy_http.so' >> /usr/local/apache2/conf/httpd.conf &&
+      echo 'ProxyPreserveHost On' >> /usr/local/apache2/conf/httpd.conf &&
+      echo 'ProxyPass /api/ http://backend:8000/' >> /usr/local/apache2/conf/httpd.conf &&
+      echo 'ProxyPassReverse /api/ http://backend:8000/' >> /usr/local/apache2/conf/httpd.conf &&
+      echo 'ProxyPass /api http://backend:8000' >> /usr/local/apache2/conf/httpd.conf &&
+      echo 'ProxyPassReverse /api http://backend:8000' >> /usr/local/apache2/conf/httpd.conf &&
+      echo 'ProxyPass / http://frontend:80/' >> /usr/local/apache2/conf/httpd.conf &&
+      echo 'ProxyPassReverse / http://frontend:80/' >> /usr/local/apache2/conf/httpd.conf &&
+      httpd-foreground
+      "
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - app_net
+
+networks:
+
+  app_net:
+
+    driver: bridge # les conteneurs seront sur le meme reseau
+
+volumes:
+  postgres_data:
+      
