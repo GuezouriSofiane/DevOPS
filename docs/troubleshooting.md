@@ -12,7 +12,7 @@ Les modifications apportées à la configuration Apache (`vhost.conf`) ne sont p
 
 ### Cause possible
 
-Sous Windows (Docker Desktop + Git Bash/MSYS), le montage des volumes peut parfois être mal interprété ou mis en cache, empêchant Apache de charger la dernière version de la configuration.
+Sous Windows (Docker Desktop et Git Bash/MSYS), le montage des volumes peut parfois être mal interprété ou mis en cache, empêchant Apache de charger la dernière version de la configuration.
 
 ### Vérifications
 

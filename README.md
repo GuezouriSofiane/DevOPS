@@ -1,4 +1,4 @@
-#  Projet de Déploiement d'Architecture Conteneurisée (DevOps)
+# 🌐 Projet de Déploiement d'Architecture Conteneurisée (DevOps)
 
 Ce projet a été réalisé dans le cadre d'un exercice technique de **Stage DevOps / Administration Système & Réseau**.
 
@@ -6,9 +6,22 @@ L'objectif est de déployer une application web conteneurisée composée d'un **
 
 ---
 
-#  Architecture Technique
+# 🏗️ Architecture Technique
 
-L'application est composée de quatre services Docker :
+L'application est composée de quatre services Docker orchestrés et isolés.
+
+```mermaid
+graph TD
+    Client["🌐 Navigateur Client"] -->|Port 80 : HTTP| Apache["Apache HTTPD<br/>Reverse Proxy"]
+
+    subgraph app_net["Réseau Docker privé (app_net)"]
+        Apache -->|/| Frontend["Frontend<br/>Nginx / Alpine"]
+        Apache -->|/api/*| Backend["Backend<br/>Python / Flask"]
+        Backend -->|Connexion interne| Postgres[(PostgreSQL 16)]
+    end
+```
+
+Les services sont les suivants :
 
 * **Reverse Proxy (Apache HTTPD)**
   Point d'entrée unique de l'application. Il expose uniquement le port **80** et redirige les requêtes vers le Frontend ou le Backend.
@@ -28,11 +41,11 @@ L'application est composée de quatre services Docker :
 
 ---
 
-#  Choix Techniques et Sécurité
+# 🔒 Choix Techniques et Sécurité
 
 ## Isolation réseau
 
-Tous les conteneurs sont connectés à un réseau Docker privé :
+Tous les conteneurs sont connectés à un réseau Docker privé.
 
 ```yaml
 networks:
@@ -83,21 +96,18 @@ Puis redirige automatiquement :
 
 ## Optimisations (Bonus)
 
-Le projet inclut plusieurs bonus :
+Le projet intègre plusieurs bonnes pratiques et éléments complémentaires :
 
-* Docker Compose
-* Healthchecks Docker
-* Réseau Docker dédié
-* Variables d'environnement
-* `.env.example`
-* Documentation complète
-* Script de supervision
-* Logs Apache
-* Architecture facilement reproductible
+* Réseau Docker dédié (`app_net`) pour isoler les services.
+* Utilisation de variables d'environnement pour la configuration de l'application et de PostgreSQL.
+* Fichier `.env.example` permettant de recréer facilement l'environnement.
+* Documentation complète (`README.md` et `docs/troubleshooting.md`) pour faciliter le déploiement et le diagnostic.
+* Script de supervision (`scripts/check.sh`) permettant de vérifier automatiquement l'état des services et des principaux endpoints.
+* Reverse Proxy Apache configuré avec `ProxyPass` et `ProxyPassReverse` pour séparer le Frontend et le Backend.
 
 ---
 
-#  Guide de démarrage
+# 🚀 Guide de démarrage
 
 ## Prérequis
 
@@ -148,15 +158,13 @@ docker compose ps
 
 ## 5. Vérifier le fonctionnement
 
-Exécuter :
-
 ```bash
 ./scripts/check.sh
 ```
 
 ---
 
-#  Commandes utiles
+# 🛠️ Commandes utiles
 
 ## Afficher les conteneurs
 
@@ -185,7 +193,7 @@ docker compose up -d --build
 
 ---
 
-#  Endpoints disponibles
+# 🌐 Endpoints disponibles
 
 Une fois les conteneurs démarrés :
 
@@ -198,12 +206,13 @@ Une fois les conteneurs démarrés :
 
 ---
 
-#  Structure du projet
+# 📁 Structure du projet
 
 ```text
 project/
 ├── README.md
 ├── docker-compose.yml
+├── .env.example
 ├── apache/
 │   └── vhost.conf
 ├── backend/
@@ -221,7 +230,7 @@ project/
 
 ---
 
-#  Description des services
+# 📋 Description des services
 
 | Service    | Description                         |
 | ---------- | ----------------------------------- |
@@ -232,7 +241,7 @@ project/
 
 ---
 
-#  Limites connues
+# ⚠️ Limites connues
 
 * L'application utilise uniquement le protocole **HTTP**.
 * Aucun certificat SSL/TLS n'est configuré.
@@ -241,7 +250,7 @@ project/
 
 ---
 
-#  Pistes d'amélioration
+# 🚀 Pistes d'amélioration
 
 Plusieurs améliorations pourraient être apportées :
 
@@ -255,7 +264,7 @@ Plusieurs améliorations pourraient être apportées :
 
 ---
 
-#  Documentation
+# 📖 Documentation
 
 Les fichiers suivants complètent le projet :
 
