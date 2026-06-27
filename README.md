@@ -122,8 +122,8 @@ Avant de commencer, installer :
 ## 1. Cloner le projet
 
 ```bash
-git clone <repository-url>
-cd project
+git clone https://github.com/GuezouriSofiane/DevOPS.git
+cd DevOPS
 ```
 
 ---
