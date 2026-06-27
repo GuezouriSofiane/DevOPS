@@ -293,3 +293,187 @@ ss -tulpn
 ```powershell
 netstat -ano
 ```
+---
+
+# Cas 4 — [Bonus / Sécurité] Le conteneur Backend s'exécute toujours en `root` ou ne démarre plus après le passage en utilisateur non-root
+
+## Symptôme
+
+Après avoir modifié le `Dockerfile` afin d'exécuter l'application avec un utilisateur non privilégié (`flaskuser`), le backend ne démarre plus ou le conteneur s'exécute toujours avec l'utilisateur `root`.
+
+Le script `check.sh` peut également afficher :
+
+```text
+[KO] Backend health error
+```
+
+---
+
+## Vérifications
+
+### 1. Reconstruire complètement l'image sans utiliser le cache Docker
+
+Sous Windows, Docker Desktop peut conserver une ancienne image en cache.
+
+```bash
+docker compose down
+docker compose build --no-cache backend
+docker compose up -d
+```
+
+---
+
+### 2. Vérifier l'utilisateur exécutant l'application
+
+Depuis le conteneur Backend :
+
+```bash
+docker compose exec backend whoami
+```
+
+Résultat attendu :
+
+```text
+flaskuser
+```
+
+Si le résultat est :
+
+```text
+root
+```
+
+cela signifie que l'instruction `USER flaskuser` n'est pas correctement appliquée dans le `Dockerfile`.
+
+---
+
+### 3. Vérifier les erreurs liées aux dépendances Python
+
+Si les logs affichent une erreur du type :
+
+```text
+ModuleNotFoundError: No module named 'flask'
+```
+
+cela signifie généralement que les dépendances Python ne sont pas accessibles par l'utilisateur non privilégié.
+
+Vérifier les logs :
+
+```bash
+docker compose logs backend
+```
+
+**Solution :**
+
+Installer les dépendances avec `pip` avant de passer à l'utilisateur `flaskuser`, puis utiliser :
+
+```dockerfile
+USER flaskuser
+```
+
+uniquement à la fin du `Dockerfile`.
+
+---
+
+# Cas 5 — [Bonus / Kubernetes] Erreur `dial tcp [::1]:8080: connectex` lors des tests de la NetworkPolicy
+
+## Symptôme
+
+Lors de l'exécution d'une commande `kubectl`, le terminal affiche :
+
+```text
+Unable to connect to the server: dial tcp [::1]:8080: connectex:
+No connection could be made because the target machine actively refused it.
+```
+
+---
+
+## Cause possible
+
+Cette erreur indique qu'aucun cluster Kubernetes n'est actuellement démarré.
+
+Le projet fonctionne avec **Docker Compose**.
+
+Le fichier :
+
+```text
+kubernetes/postgres-networkpolicy.yaml
+```
+
+est uniquement fourni comme **bonus**.
+
+---
+
+## Vérifications
+
+### 1. Vérifier que Kubernetes est bien démarré
+
+Si vous souhaitez tester la NetworkPolicy, démarrez un cluster Kubernetes (Minikube ou Kind) puis vérifiez :
+
+```bash
+kubectl cluster-info
+```
+
+Si aucun cluster n'est lancé, cette commande retournera une erreur.
+
+---
+
+### 2. Vérifier l'isolation réseau sous Docker Compose
+
+Même sans Kubernetes, l'isolation est assurée grâce au réseau Docker privé :
+
+```yaml
+networks:
+  app_net:
+    driver: bridge
+```
+
+---
+
+### 3. Vérifier que le Backend peut joindre PostgreSQL
+
+Depuis le conteneur Backend :
+
+```bash
+docker compose exec backend nc -zv postgres 5432
+```
+
+Résultat attendu :
+
+```text
+postgres (172.x.x.x:5432) open
+```
+
+---
+
+### 4. Vérifier que PostgreSQL n'est pas accessible depuis l'hôte
+
+Depuis la machine locale :
+
+```bash
+curl http://localhost:5432
+```
+
+ou
+
+```bash
+nc -zv localhost 5432
+```
+
+Résultat attendu :
+
+```text
+Connection refused
+```
+
+ou
+
+```text
+Failed to connect
+```
+
+Cela confirme que PostgreSQL n'est pas exposé publiquement et que l'isolation réseau est correctement appliquée.
+
+---
+
+
