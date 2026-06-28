@@ -1,7 +1,7 @@
 services:
   
   postgres:
-    image: postgres:16 #telecharge image officielle PostrSQL
+    image: postgres:16 #telecharge image officielle PostgreSQL
     container_name: postgres
     restart: always #si conteneur sarrete Docker le redémarre
     env_file:
@@ -9,36 +9,45 @@ services:
     
     volumes:
       - postgres_data:/var/lib/postgresql/data #conserver les données meme si le conteneur est suprimé
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql #premier demarrage PostgrSQL ececute auto init.sql
-
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql #premier demarrage PostgreSQL ececute auto init.sql
     networks:
       - app_net #tous les conteneurs sur le meme reseau
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
 
     build: ./backend
-
+  
     container_name: backend
 
     restart: always
 
     env_file:
       - .env
-
-    depends_on: #attend que postgrSQL démarre
-      - postgres
-
+    depends_on:
+      postgres:
+        condition: service_healthy # Attend que la DB soit VRAIMENT prête (et pas juste lancée)
     networks:
       - app_net
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health').read()"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s  # On lui laisse 10 secondes pour démarrer tranquillement avant de le juger
 
   frontend:
-
+   
     build: ./frontend
-
+   
     container_name: frontend
-
+   
     restart: always
-
+   
     networks:
       - app_net
 
@@ -62,17 +71,18 @@ services:
       httpd-foreground
       "
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy # Apache attend que le backend réponde "healthy" avant de démarrer
+      frontend:
+        condition: service_started
     networks:
       - app_net
 
 networks:
-
+  
   app_net:
-
+  
     driver: bridge # les conteneurs seront sur le meme reseau
 
 volumes:
   postgres_data:
-      

@@ -109,6 +109,7 @@ Le projet intègre plusieurs bonnes pratiques et éléments complémentaires :
 * Sécurité Kubernetes anticipée** : Fourniture du manifeste `NetworkPolicy` pour appliquer une isolation Zero-Trust au niveau du cluster de production.
 * Endpoint /metrics** : Exposition de métriques applicatives au format de texte standard pour Prometheus.
 * Logs structurés en JSON** : Formatage des sorties applicatives du backend pour faciliter leur exploitation par des collecteurs de logs.
+* Healthchecks natifs Docker** : Intégration de vérifications de santé automatisées (`healthcheck:`) sous Postgres et le Backend pour assurer une orchestration résiliente et un ordre de démarrage parfait (`service_healthy`).
 
 ---
 
