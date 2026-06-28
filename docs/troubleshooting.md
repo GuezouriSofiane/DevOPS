@@ -476,7 +476,7 @@ Cela confirme que PostgreSQL n'est pas exposé publiquement et que l'isolation r
 
 ---
 
-# 🔍 Problèmes résolus lors de la mise en place des Healthchecks
+#  Problèmes résolus lors de la mise en place des Healthchecks
 
 Cette section documente les principaux problèmes rencontrés lors de l'ajout des **Healthchecks Docker** ainsi que les solutions mises en œuvre.
 
