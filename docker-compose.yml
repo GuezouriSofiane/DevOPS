@@ -1,5 +1,3 @@
-version: "3.9" #version du format Docker Compose
-
 services:
   
   postgres:
