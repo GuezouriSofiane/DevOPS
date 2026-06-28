@@ -258,7 +258,7 @@ project/
 | ---------- | ----------------------------------- |
 | Apache     | Reverse Proxy exposé sur le port 80 |
 | Frontend   | Interface Web HTML                  |
-| Backend    | API Flask                           |
+| Backend    | API Flask sécurisée (Non-root, logs JSON, métriques)|
 | PostgreSQL | Base de données relationnelle       |
 
 ---
