@@ -476,4 +476,153 @@ Cela confirme que PostgreSQL n'est pas exposé publiquement et que l'isolation r
 
 ---
 
+# 🔍 Problèmes résolus lors de la mise en place des Healthchecks
+
+Cette section documente les principaux problèmes rencontrés lors de l'ajout des **Healthchecks Docker** ainsi que les solutions mises en œuvre.
+
+---
+
+## 1. Le conteneur Backend reste en statut `unhealthy` ou boucle sur `Connection refused`
+
+### Symptôme
+
+Après le démarrage de l'environnement, le conteneur **Backend** ne passe jamais à l'état `healthy`.
+
+Les journaux du Healthcheck affichent par exemple :
+
+```text
+Connecting to localhost:8000 ([::1]:8000)
+wget: can't connect to remote host: Connection refused
+```
+
+### Cause
+
+Les commandes `wget` ou `curl` utilisées par le Healthcheck tentent parfois de contacter l'adresse IPv6 locale (`::1`).
+
+Or l'application Flask écoute uniquement sur IPv4 (`0.0.0.0:8000`).
+
+De plus, certaines images Docker minimalistes (Alpine Linux) ne contiennent pas toujours les utilitaires `wget` ou `curl`.
+
+### Solution
+
+Utiliser directement la bibliothèque standard de Python afin d'interroger l'endpoint `/health`.
+
+Exemple de configuration :
+
+```yaml
+healthcheck:
+  test:
+    [
+      "CMD",
+      "python",
+      "-c",
+      "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health')"
+    ]
+  interval: 10s
+  timeout: 5s
+  retries: 3
+  start_period: 10s
+```
+
+Cette solution évite toute dépendance à des outils externes et force l'utilisation de l'adresse IPv4.
+
+---
+
+## 2. Le conteneur PostgreSQL échoue lors du premier démarrage
+
+### Symptôme
+
+Au premier lancement du projet (ou après une reconstruction complète), PostgreSQL est marqué `unhealthy` et le Backend ne démarre pas.
+
+Docker affiche par exemple :
+
+```text
+dependency failed to start
+```
+
+### Cause
+
+Lors du premier démarrage, PostgreSQL initialise automatiquement la base de données ainsi que les scripts présents dans :
+
+```text
+database/init.sql
+```
+
+Pendant cette phase, la base n'est pas encore prête à accepter des connexions.
+
+Le Healthcheck est exécuté trop tôt et considère alors le conteneur comme défaillant.
+
+### Solution
+
+Utiliser l'outil natif `pg_isready` et ajouter une période de grâce (`start_period`) afin de laisser le temps à PostgreSQL de terminer son initialisation.
+
+Exemple :
+
+```yaml
+healthcheck:
+  test: ["CMD-SHELL", "pg_isready -U postgres"]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 15s
+```
+
+Cette configuration améliore considérablement la fiabilité du démarrage.
+
+---
+
+# 🛠️ Commandes utiles pour diagnostiquer les Healthchecks
+
+Afficher le rapport détaillé du Healthcheck d'un conteneur :
+
+```bash
+docker inspect --format='{{json .State.Health}}' backend
+```
+
+```bash
+docker inspect --format='{{json .State.Health}}' postgres
+```
+
+Afficher les derniers logs :
+
+```bash
+docker compose logs backend
+```
+
+```bash
+docker compose logs postgres
+```
+
+Vérifier rapidement le statut des conteneurs :
+
+```bash
+docker compose ps
+```
+
+---
+
+## Résultat attendu
+
+Une fois les Healthchecks correctement configurés, tous les services doivent apparaître avec l'état :
+
+```text
+STATUS
+healthy
+```
+
+Le Backend doit répondre correctement à :
+
+```bash
+curl http://localhost/api/health
+```
+
+avec :
+
+```json
+{
+  "status": "ok"
+}
+```
+
+et l'environnement peut être démarré normalement sans erreur de dépendance.
 
