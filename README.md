@@ -106,6 +106,9 @@ Le projet intègre plusieurs bonnes pratiques et éléments complémentaires :
 * Reverse Proxy Apache configuré avec `ProxyPass` et `ProxyPassReverse` pour séparer le Frontend et le Backend.
 * Dockerfile multi-stage :** Séparation de l'étape de build et d'exécution pour réduire la taille de l'image finale.
 * Sécurité Non-Root :** Le conteneur Backend s'exécute avec un utilisateur aux privilèges restreints (`flaskuser`) au lieu de `root`.
+* Sécurité Kubernetes anticipée** : Fourniture du manifeste `NetworkPolicy` pour appliquer une isolation Zero-Trust au niveau du cluster de production.
+* Endpoint /metrics** : Exposition de métriques applicatives au format de texte standard pour Prometheus.
+* Logs structurés en JSON** : Formatage des sorties applicatives du backend pour faciliter leur exploitation par des collecteurs de logs.
 
 ---
 
@@ -197,7 +200,7 @@ docker compose up -d --build
 
 #  Endpoints disponibles
 
-Une fois les conteneurs démarrés :
+Une fois les conteneurs démarrés, les routes suivantes sont accessibles :
 
 | Service        | URL                           |
 | -------------- | ----------------------------- |
@@ -205,6 +208,7 @@ Une fois les conteneurs démarrés :
 | Health         | http://localhost/api/health   |
 | Version        | http://localhost/api/version  |
 | Database Check | http://localhost/api/db-check |
+| Metrics (Bonus)| http://localhost/api/metrics  |
 
 ---
 
@@ -275,7 +279,6 @@ Plusieurs améliorations pourraient être apportées :
 * Ajouter HTTPS avec Let's Encrypt.
 * Déployer l'application sur Kubernetes.
 * Ajouter Prometheus et Grafana pour la supervision.
-* Ajouter un endpoint `/metrics`.
 * Mettre en place une intégration continue (CI/CD).
 * Ajouter des tests automatisés.
 * Déployer sur un serveur Linux.
